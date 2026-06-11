@@ -19,7 +19,7 @@ jobs:
           script: |
             cd ~/tani-vision
             git pull origin main
-            sudo docker compose up -d --build backend
+            sudo docker compose up -d --build
 
   deploy-frontend:
     name: Deploy Frontend to AWS

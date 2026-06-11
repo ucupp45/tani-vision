@@ -16,7 +16,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-prom-bundle": "^8.0.0",
     "multer": "^1.4.5-lts.1",
-    "mysql2": "^3.22.5"
+    "mysql2": "^3.22.5",
+    "prom-client": "^15.1.3"
   }
 }

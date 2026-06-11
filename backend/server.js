@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import mysql from 'mysql2/promise'; // Tambahan untuk koneksi MySQL
+import promBundle from 'express-prom-bundle';
 
 dotenv.config();
 
@@ -141,6 +142,14 @@ app.post('/api/diagnosa', upload.single('image'), async (req, res) => {
         console.error("Detail Error:", error);
         res.status(500).json({ error: 'Terjadi kesalahan saat memproses gambar atau API Gemini' });
     }
+
+        // Sensor Prometheus
+        const metricsMiddleware = promBundle({
+            includeMethod: true, 
+            includePath: true, 
+            promClient: { collectDefaultMetrics: {} }
+        });
+        app.use(metricsMiddleware);
 });
 
 const PORT = process.env.PORT || 5000;

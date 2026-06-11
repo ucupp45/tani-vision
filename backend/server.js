@@ -62,7 +62,7 @@ app.post('/api/diagnosa', upload.single('image'), async (req, res) => {
 
         // 2. Integrasi ke Google Gemini API (Menggunakan model gemini-1.5-flash-latest)
         console.log('Menganalisis dengan Gemini API...');
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-lite-latest" });
         
         // Siapkan gambar untuk Gemini
         const imagePart = fileToGenerativePart(req.file.buffer, req.file.mimetype);

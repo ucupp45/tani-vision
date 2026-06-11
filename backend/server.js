@@ -4,6 +4,7 @@ import multer from 'multer';
 import dotenv from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import mysql from 'mysql2/promise'; // Tambahan untuk koneksi MySQL
 
 dotenv.config();
 
@@ -26,6 +27,39 @@ const s3 = new S3Client({
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     },
 });
+
+// --- Konfigurasi Koneksi ke AWS RDS ---
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
+// Fungsi Otomatis Pembuat Database & Tabel
+async function initDB() {
+    try {
+        const connection = await pool.getConnection();
+        await connection.query('CREATE DATABASE IF NOT EXISTS tanivision;');
+        await connection.query('USE tanivision;');
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS riwayat_diagnosis (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nama_file VARCHAR(255),
+                hasil_analisis TEXT,
+                tanggal TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        connection.release();
+        console.log("✅ Database RDS & Tabel riwayat_diagnosis siap mengamankan data!");
+    } catch (err) {
+        console.error("❌ Gagal inisialisasi database RDS:", err);
+    }
+}
+initDB();
+// --------------------------------------
 
 // Fungsi pembantu untuk mengubah buffer gambar ke format inlineData Gemini
 function fileToGenerativePart(buffer, mimeType) {
@@ -60,7 +94,7 @@ app.post('/api/diagnosa', upload.single('image'), async (req, res) => {
         // Asumsi URL publik R2
         const imageUrl = `${process.env.R2_ENDPOINT}/${process.env.R2_BUCKET_NAME}/${fileKey}`;
 
-        // 2. Integrasi ke Google Gemini API (Menggunakan model gemini-1.5-flash-latest)
+        // 2. Integrasi ke Google Gemini API 
         console.log('Menganalisis dengan Gemini API...');
         const model = genAI.getGenerativeModel({ model: "gemini-flash-lite-latest" });
         
@@ -84,7 +118,19 @@ app.post('/api/diagnosa', upload.single('image'), async (req, res) => {
 
         console.log('Analisis selesai!');
 
-        // 3. Kembalikan respons ke Frontend
+        // --- 3. Simpan Riwayat ke AWS RDS ---
+        try {
+            await pool.query(
+                'INSERT INTO tanivision.riwayat_diagnosis (nama_file, hasil_analisis) VALUES (?, ?)',
+                [req.file.originalname, hasilAnalisis] 
+            );
+            console.log("💾 Riwayat diagnosis berhasil direkam di AWS RDS!");
+        } catch (dbError) {
+            console.error("❌ Gagal merekam ke RDS:", dbError);
+        }
+        // ------------------------------------
+
+        // 4. Kembalikan respons ke Frontend
         res.status(200).json({
             success: true,
             imageUrl: imageUrl,

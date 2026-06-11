@@ -32,7 +32,7 @@ function App() {
 
     try {
       // Mengirim request ke backend lokal kita
-      const response = await fetch('http://localhost:5000/api/diagnosa', {
+      const response = await fetch('http://3.27.212.182:5000/api/diagnosa', {
         method: 'POST',
         body: formData,
       });

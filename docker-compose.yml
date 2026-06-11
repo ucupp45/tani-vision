@@ -1,16 +1,26 @@
 services:
+  # --- SERVER FRONTEND ---
+  frontend:
+    build: ./frontend
+    container_name: tani_frontend
+    ports:
+      - "5173:5173"  # Sesuai dengan port Vite React kamu
+    restart: always
+
+  # --- SERVER BACKEND ---
   backend:
-    build: ./backend  # <-- Titik masalahnya di sini, sekarang sudah diarahkan ke folder backend
+    build: ./backend
     container_name: tani_backend
     ports:
       - "5000:5000"
     restart: always
 
+  # --- MONITORING TOOLS (BONUS) ---
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
     volumes:
-      - ./backend/prometheus.yml:/etc/prometheus/prometheus.yml # <-- Jalur ini juga disesuaikan
+      - ./backend/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
     restart: always

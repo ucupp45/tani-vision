@@ -92,7 +92,7 @@ app.post('/api/diagnosa', upload.single('image'), async (req, res) => {
         await s3.send(new PutObjectCommand(uploadParams));
         
         // Asumsi URL publik R2
-        const imageUrl = `${process.env.R2_ENDPOINT}/${process.env.R2_BUCKET_NAME}/${fileKey}`;
+        const imageUrl = `https://pub-52948cacb0754fac892c00397fa4dfb7.r2.dev/${fileKey}`;
 
         // 2. Integrasi ke Google Gemini API 
         console.log('Menganalisis dengan Gemini API...');
